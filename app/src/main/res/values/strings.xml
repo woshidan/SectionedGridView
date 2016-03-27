@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">MyLibApp</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_insert_1_item">Insert 1 Item</string>
+    <string name="action_remove_1_item">Remove 1 Item</string>
+    <string name="action_insert_5_items">Insert 5 Items</string>
+    <string name="action_remove_5_items">Remove 5 Items</string>
+</resources>
