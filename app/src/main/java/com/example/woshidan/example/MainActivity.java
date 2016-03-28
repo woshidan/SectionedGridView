@@ -59,20 +59,12 @@ public class MainActivity extends AppCompatActivity {
 
        switch (item.getItemId()) {
            case R.id.action_insert_1_item:
-               ImageContent content = getRandomImageContent();
-               int insertPosition = parentAdapter.getInsertContentPosition(content);
-               Log.d("onOptionsItemSelected", "insertPosition: " + insertPosition);
-               parentAdapter.contents.add(content);
-               parentAdapter.sortContents();
-               // parentAdapter.so
-               parentAdapter.notifyContentInserted(parentAdapter.contents.indexOf(content));
-               // parentAdapter.notifyDataSetChanged();
+               ImageContent insertedContent = getRandomImageContent();
+               parentAdapter.addContent(insertedContent);
                break;
            case R.id.action_remove_1_item:
-//               parentAdapter.contents.remove(2);
-               parentAdapter.notifyContentRemoved(2);
-//               parentAdapter.contents.remove(2);
-//               parentAdapter.notifyContentSetChanged();
+               int removedPositionInContents = rand.nextInt(parentAdapter.contents.size());
+               parentAdapter.removeContentAt(removedPositionInContents);
                break;
            case R.id.action_insert_5_items:
                break;

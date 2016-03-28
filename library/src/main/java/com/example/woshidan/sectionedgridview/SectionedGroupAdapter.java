@@ -147,9 +147,11 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     public void sortHeaders() { Collections.sort(headers, new SectionComparator()); }
     public void sortFooters() { Collections.sort(footers, new SectionComparator()); }
 
-    public void notifyContentInserted(int insertedContentPosition) {
-        Content insertedContent = contents.get(insertedContentPosition);
+    public void addContent(Content insertedContent) {
+        contents.add(insertedContent);
+        sortContents();
 
+        int insertedContentPosition = contents.indexOf(insertedContent);
         int insertedLayoutPosition = transformContentPositionToLayoutPosition(insertedContentPosition);
 
         int insertLayoutRangeStart = insertedLayoutPosition;
@@ -209,7 +211,6 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             }
         }
 
-        contentAdapter.setContents(contents);
         notifyItemRangeInserted(insertLayoutRangeStart, insertLayoutRangeEnd - insertLayoutRangeStart + 1);
     }
 
@@ -231,20 +232,7 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         return isFirstContentInSection && isLastContentInSection;
     }
 
-    public int getInsertContentPosition(Content insertedContent) {
-        Iterator<? extends Content> iterator = contents.iterator();
-        int position = 0;
-        while (iterator.hasNext()) {
-            Content content = iterator.next();
-            if (insertedContent.getSortKey() < content.getSortKey()) {
-                break;
-            }
-            position++;
-        }
-        return position;
-    }
-
-    public void notifyContentRemoved(int removedPositionInContents) {
+    public void removeContentAt(int removedPositionInContents) {
         int positionInLayout = transformContentPositionToLayoutPosition(removedPositionInContents);
         Content removedContent = contents.get(removedPositionInContents);
 
