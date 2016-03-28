@@ -70,7 +70,7 @@ public class MainActivity extends AppCompatActivity {
                break;
            case R.id.action_remove_1_item:
 //               parentAdapter.contents.remove(2);
-               parentAdapter.removeContentAt(2);
+               parentAdapter.notifyContentRemoved(2);
 //               parentAdapter.contents.remove(2);
 //               parentAdapter.notifyContentSetChanged();
                break;

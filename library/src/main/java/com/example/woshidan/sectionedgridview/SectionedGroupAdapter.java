@@ -144,9 +144,6 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         Collections.sort(contents, new ContentComparator());
     }
 
-    // 1. get getInsertContentPosition(Content insertedContent)
-    // 2. addContents contents.add(getInsertContentPosition(Content insertedContent), insertedContent)
-    // 3. call this.
     public void notifyContentInserted(int insertedContentPosition) {
         Content insertedContent = contents.get(insertedContentPosition);
         boolean onlyContentInSection = getIsOnlyContentInSection(insertedContent, insertedContentPosition);
@@ -211,11 +208,11 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         return position;
     }
 
-    public void removeContentAt(int positionInContents) {
-        int positionInLayout = transformContentPositionToLayoutPosition(positionInContents);
-        Content removedContent = contents.get(positionInContents);
+    public void notifyContentRemoved(int removedPositionInContents) {
+        int positionInLayout = transformContentPositionToLayoutPosition(removedPositionInContents);
+        Content removedContent = contents.get(removedPositionInContents);
 
-        boolean onlyContentInSection = getIsOnlyContentInSection(removedContent, positionInContents);
+        boolean onlyContentInSection = getIsOnlyContentInSection(removedContent, removedPositionInContents);
 
         int shiftedHeaderPosition = 1;
         int shiftedFooterPosition = 1;
@@ -228,7 +225,7 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
                 removeLayoutRangeStart = positionInLayout - 1;
                 int removedHeaderPosition = transformLayoutPositionToHeaderPosition((positionInLayout-1));
                 headers.remove(removedHeaderPosition);
-                headerPositions.remove(removedHeaderPosition);
+                headerPositions.remove(removeLayoutRangeStart);
 
                 headerAdapter.setHeaders(headers);
                 shiftedHeaderPosition++;
@@ -239,7 +236,7 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
                 removeLayoutRangeEnd = positionInLayout + 1;
                 int removedFooterPosition = transformLayoutPositionToFooterPosition(positionInLayout+1);
                 footers.remove(removedFooterPosition);
-                footerPositions.remove(removedFooterPosition);
+                footerPositions.remove(removeLayoutRangeEnd);
 
                 footerAdapter.setFooters(footers);
                 shiftedFooterPosition++;
@@ -255,7 +252,7 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
             footerPositions = shiftPosition(removeLayoutRangeEnd, - 1 * shiftedFooterPosition, footerPositions);
         }
 
-        contents.remove(positionInContents);
+        contents.remove(removedPositionInContents);
         contentAdapter.setContents(contents);
 
         notifyItemRangeRemoved(removeLayoutRangeStart, removeLayoutRangeEnd - removeLayoutRangeStart + 1);
