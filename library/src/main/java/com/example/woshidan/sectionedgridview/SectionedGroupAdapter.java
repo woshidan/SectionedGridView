@@ -156,8 +156,6 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         int insertLayoutRangeEnd   = insertedLayoutPosition;
 
         long insertedSectionKey = insertedContent.getSectionKey();
-
-
         if (headerAdapter != null && footerAdapter != null) {
             if (!headers.contains(insertedSectionKey)) {
                 headers.add(insertedSectionKey);
@@ -212,12 +210,6 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         }
 
         contentAdapter.setContents(contents);
-
-        Log.d("AB headers", headers.toString());
-        Log.d("AB headerPositions 5", headerPositions.toString());
-        Log.d("AB footers", footers.toString());
-        Log.d("AB footerPositions", footerPositions.toString());
-        // notifyDataSetChanged();
         notifyItemRangeInserted(insertLayoutRangeStart, insertLayoutRangeEnd - insertLayoutRangeStart + 1);
     }
 
