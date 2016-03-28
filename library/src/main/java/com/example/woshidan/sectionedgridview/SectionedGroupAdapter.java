@@ -6,6 +6,7 @@ import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -17,35 +18,35 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     private static final int VIEW_TYPE_FOOTER = 2;
 
     public ArrayList<Content> contents;
-    private ArrayList<Integer> headerPositions; // get(positionInHeader) => positionInLayout
-    private ArrayList<Integer> footerPositions; // get(positionInFooter) => positionInLayout
-    private ArrayList<Long> headers;
-    private ArrayList<Long> footers;
+    protected HashMap<Integer, Long> headerPositions; // #get(positionInLayout) => header
+    protected HashMap<Integer, Long> footerPositions; // #get(positionInLayout) => footer
+    protected ArrayList<Long> headers;
+    protected ArrayList<Long> footers;
 
-    private ContentAdapter contentAdapter;
-    private HeaderAdapter headerAdapter;
-    private FooterAdapter footerAdapter;
+    protected ContentAdapter contentAdapter;
+    protected HeaderAdapter headerAdapter;
+    protected FooterAdapter footerAdapter;
 
-    private RecyclerView recyclerView;
-    private GridLayoutManager layoutManager;
+    protected RecyclerView recyclerView;
+    protected GridLayoutManager layoutManager;
 
     private SectionedGroupAdapter(ArrayList<Content> contents) {
         Collections.sort(contents, new ContentComparator());
         this.contents = contents;
-        this.headerPositions = new ArrayList<Integer>();
-        this.footerPositions = new ArrayList<Integer>();
+        this.headerPositions = new HashMap<Integer, Long>();
+        this.footerPositions = new HashMap<Integer, Long>();
 
         this.headers = new ArrayList<Long>();
         this.footers = new ArrayList<Long>();
     }
 
     private void init() {
-        buildInitialSections();
+        initialSectioning();
         setupLayoutManager();
         initializeChildrenAdapter();
     }
 
-    protected void buildInitialSections() {
+    protected void initialSectioning() {
         Iterator<? extends Content> iterator = contents.iterator();
         Long previousSectionKey = null;
         int currentPosition = 0;
@@ -55,20 +56,22 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
 
             if (footerAdapter != null && previousSectionKey != null && previousSectionKey != sectionKey) {
                 footers.add(previousSectionKey);
-                footerPositions.add(currentPosition);
+                footerPositions.put(currentPosition, previousSectionKey);
                 currentPosition++;
             }
 
             if (headerAdapter != null && !headers.contains(sectionKey)) {
                 headers.add(sectionKey);
-                headerPositions.add(currentPosition);
+                headerPositions.put(currentPosition, sectionKey);
                 currentPosition++;
             }
             previousSectionKey = content.getSectionKey();
             currentPosition++;
         }
-        footers.add(previousSectionKey);
-        footerPositions.add(currentPosition);
+        if (footers != null) {
+            footers.add(previousSectionKey);
+            footerPositions.put(currentPosition, previousSectionKey);
+        }
     }
 
     protected void initializeChildrenAdapter() {
@@ -127,10 +130,10 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     }
 
     @Override
-    public int getItemViewType(int position) {
-        if (headerPositions.contains(position)) {
+    public int getItemViewType(int layoutPosition) {
+        if (headerPositions.get(layoutPosition) != null) {
             return VIEW_TYPE_HEADER;
-        } else if (footerPositions.contains(position)) {
+        } else if (footerPositions.get(layoutPosition) != null) {
             return VIEW_TYPE_FOOTER;
         } else {
             return VIEW_TYPE_CONTENT;
@@ -144,30 +147,22 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     // 1. get getInsertContentPosition(Content insertedContent)
     // 2. addContents contents.add(getInsertContentPosition(Content insertedContent), insertedContent)
     // 3. call this.
-    public void insertedContentAt(int insertedContentPosition) {
-        // Log.d("insertedContentAt", "insertedContentPosition: " + insertedContentPosition);
+    public void notifyContentInserted(int insertedContentPosition) {
         Content insertedContent = contents.get(insertedContentPosition);
-
         boolean onlyContentInSection = getIsOnlyContentInSection(insertedContent, insertedContentPosition);
-        // Log.d("insertedContentAt", "onlyContentInSection: " + onlyContentInSection);
 
-        // 後で仮に足される
         int insertedLayoutPosition = transformContentPositionToLayoutPosition(insertedContentPosition);
-        // Log.d("insertedContentAt", "insertedLayoutPosition: " + insertedLayoutPosition);
-
-        int shiftedHeaderPosition = 1;
-        int shiftedFooterPosition = 1;
 
         int insertLayoutRangeStart = insertedLayoutPosition;
         int insertLayoutRangeEnd   = insertedLayoutPosition;
 
-        this.headerPositions = new ArrayList<Integer>();
-        this.footerPositions = new ArrayList<Integer>();
+        this.headerPositions = new HashMap<Integer, Long>();
+        this.footerPositions = new HashMap<Integer, Long>();
 
         this.headers = new ArrayList<Long>();
         this.footers = new ArrayList<Long>();
 
-        buildInitialSections();
+        initialSectioning();
 
         if (onlyContentInSection) {
             if (headerAdapter != null) {
@@ -268,8 +263,8 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
 
     public void notifyContentSetChanged() {
         Collections.sort(contents, new ContentComparator());
-        this.headerPositions = new ArrayList<Integer>();
-        this.footerPositions = new ArrayList<Integer>();
+        this.headerPositions = new HashMap<Integer, Long>();
+        this.footerPositions = new HashMap<Integer, Long>();
 
         this.headers = new ArrayList<Long>();
         this.footers = new ArrayList<Long>();
@@ -283,55 +278,48 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         notifyDataSetChanged();
     }
 
-    private ArrayList<Integer> shiftPosition(int shiftStart, int shiftDiff, ArrayList<Integer> positions) {
-        ArrayList<Integer> shiftedPositions = new ArrayList<Integer>();
-        Iterator<Integer> iterator = positions.iterator();
+    private HashMap<Integer, Long> shiftPosition(int shiftStart, int shiftDiff, HashMap<Integer, Long> positions) {
+        HashMap<Integer, Long> shiftedPositions = new HashMap<Integer, Long>();
+        Iterator<Integer> iterator = positions.keySet().iterator();
         while(iterator.hasNext()) {
             int position = iterator.next();
             if (position > shiftStart) {
-                shiftedPositions.add(position + shiftDiff);
+                shiftedPositions.put(position + shiftDiff, positions.get(position));
             } else {
-                shiftedPositions.add(position);
+                shiftedPositions.put(position, positions.get(position));
             }
         }
-        Collections.sort(shiftedPositions, new PositionComparator());
         return shiftedPositions;
     }
 
     protected int transformLayoutPositionToContentPosition(int layoutPosition) {
-        Iterator<Integer> headerIterator = headerPositions.iterator();
+        Iterator<Integer> headerIterator = headerPositions.keySet().iterator();
         int aboveHeaderCount = 0;
 
-        headerIterator = headerPositions.iterator();
         while (headerIterator.hasNext()) {
             int headerPosition = headerIterator.next();
-            // Log.d("ToContentPosition", "headerPosition " + headerPosition);
-            if (headerPosition > layoutPosition) {
-                break;
+            if (headerPosition <= layoutPosition) {
+                aboveHeaderCount++;
             }
-            aboveHeaderCount++;
         }
 
-        Iterator<Integer> footerIterator = footerPositions.iterator();
+        Iterator<Integer> footerIterator = footerPositions.keySet().iterator();
         int aboveFooterCount = 0;
         while (footerIterator.hasNext()) {
             int footerPosition = footerIterator.next();
-            // Log.d("ToContentPosition", "footerPosition " + footerPosition);
-            if (footerPosition > layoutPosition) {
-                break;
+            if (footerPosition <= layoutPosition) {
+                aboveFooterCount++;
             }
-            aboveFooterCount++;
         }
-        // Log.d("ToContentPosition", "layoutPosition " + layoutPosition + " aboveHeaderCount " + aboveHeaderCount  + " aboveFooterCount " + aboveFooterCount);
         return layoutPosition - aboveHeaderCount - aboveFooterCount;
     }
 
     protected int transformLayoutPositionToHeaderPosition(int layoutPosition) {
-        return headerPositions.indexOf(layoutPosition);
+        return headers.indexOf(headerPositions.get(layoutPosition));
     }
 
     protected int transformLayoutPositionToFooterPosition(int layoutPosition) {
-        return footerPositions.indexOf(layoutPosition);
+        return footers.indexOf(footerPositions.get(layoutPosition));
     }
 
     protected int transformContentPositionToLayoutPosition(int contentPosition) {

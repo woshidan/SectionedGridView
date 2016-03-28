@@ -22,7 +22,7 @@ public class FooterAdapter extends com.example.woshidan.sectionedgridview.Footer
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-        ((ViewHolder)holder).footerCaption.setText("section " + position);
+        ((ViewHolder)holder).footerCaption.setText("at. " + (getFooters().get(position) / 1000000000L));
     }
 
     private class ViewHolder extends RecyclerView.ViewHolder {

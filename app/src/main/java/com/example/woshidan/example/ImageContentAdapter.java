@@ -27,7 +27,7 @@ public class ImageContentAdapter extends ContentAdapter {
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
         ImageContent imageContent = (ImageContent)getContents().get(position);
-        ((ViewHolder)holder).textView.setText("No. " + position);
+        ((ViewHolder)holder).textView.setText(imageContent.getImageName());
         Picasso.with(context)
                 .load(imageContent.getImageId())
                 .fit()

@@ -24,19 +24,8 @@ public abstract class HeaderAdapter extends RecyclerView.Adapter<RecyclerView.Vi
         return headers;
     }
 
-//    @Override
-//    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//        throw new UnsupportedOperationException("You should override this method");
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-//        throw new UnsupportedOperationException("You should override this method");
-//    }
-
     @Override
     public int getItemCount() {
         return headers.size();
     }
-    // ViewHolderを持っている
 }

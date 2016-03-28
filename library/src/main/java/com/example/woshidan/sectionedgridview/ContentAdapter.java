@@ -24,16 +24,6 @@ public abstract class ContentAdapter extends RecyclerView.Adapter<RecyclerView.V
         return contents;
     }
 
-//    @Override
-//    public RecyclerView.ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-//        throw new UnsupportedOperationException("You should override this method");
-//    }
-//
-//    @Override
-//    public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
-//        throw new UnsupportedOperationException("You should override this method");
-//    }
-
     @Override
     public int getItemCount() {
         return contents.size();

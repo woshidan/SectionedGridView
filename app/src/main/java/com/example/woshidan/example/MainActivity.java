@@ -24,8 +24,6 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        Frist.importTest();
-
         ArrayList<Content> items = new ArrayList<>();
 
         for (int i = 0; i < 3; i++) {
@@ -67,7 +65,7 @@ public class MainActivity extends AppCompatActivity {
                parentAdapter.contents.add(content);
                parentAdapter.sortContents();
                // parentAdapter.so
-               parentAdapter.insertedContentAt(parentAdapter.contents.indexOf(content));
+               parentAdapter.notifyContentInserted(parentAdapter.contents.indexOf(content));
                // parentAdapter.notifyDataSetChanged();
                break;
            case R.id.action_remove_1_item:
