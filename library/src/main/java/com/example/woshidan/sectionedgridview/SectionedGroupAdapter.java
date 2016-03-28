@@ -2,6 +2,7 @@ package com.example.woshidan.sectionedgridview;
 
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.ViewGroup;
 
 import java.util.ArrayList;
@@ -23,12 +24,12 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     protected ArrayList<Long> headers;
     protected ArrayList<Long> footers;
 
-    protected ContentAdapter contentAdapter;
-    protected HeaderAdapter headerAdapter;
-    protected FooterAdapter footerAdapter;
+    public ContentAdapter contentAdapter;
+    public HeaderAdapter headerAdapter;
+    public FooterAdapter footerAdapter;
 
-    protected RecyclerView recyclerView;
-    protected GridLayoutManager layoutManager;
+    public RecyclerView recyclerView;
+    public GridLayoutManager layoutManager;
 
     private SectionedGroupAdapter(ArrayList<Content> contents) {
         Collections.sort(contents, new ContentComparator());
@@ -86,7 +87,7 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
         }
     }
 
-    private void setupLayoutManager() {
+    protected void setupLayoutManager() {
         layoutManager = (GridLayoutManager)(recyclerView.getLayoutManager());
         layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
             @Override
@@ -131,9 +132,9 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
 
     @Override
     public int getItemViewType(int layoutPosition) {
-        if (headerPositions.get(layoutPosition) != null) {
+        if (headerAdapter != null && headerPositions.get(layoutPosition) != null) {
             return VIEW_TYPE_HEADER;
-        } else if (footerPositions.get(layoutPosition) != null) {
+        } else if (footerAdapter != null && footerPositions.get(layoutPosition) != null) {
             return VIEW_TYPE_FOOTER;
         } else {
             return VIEW_TYPE_CONTENT;
@@ -143,37 +144,80 @@ public class SectionedGroupAdapter extends RecyclerView.Adapter<RecyclerView.Vie
     public void sortContents() {
         Collections.sort(contents, new ContentComparator());
     }
+    public void sortHeaders() { Collections.sort(headers, new SectionComparator()); }
+    public void sortFooters() { Collections.sort(footers, new SectionComparator()); }
 
     public void notifyContentInserted(int insertedContentPosition) {
         Content insertedContent = contents.get(insertedContentPosition);
-        boolean onlyContentInSection = getIsOnlyContentInSection(insertedContent, insertedContentPosition);
 
         int insertedLayoutPosition = transformContentPositionToLayoutPosition(insertedContentPosition);
 
         int insertLayoutRangeStart = insertedLayoutPosition;
         int insertLayoutRangeEnd   = insertedLayoutPosition;
 
-        this.headerPositions = new HashMap<Integer, Long>();
-        this.footerPositions = new HashMap<Integer, Long>();
+        long insertedSectionKey = insertedContent.getSectionKey();
 
-        this.headers = new ArrayList<Long>();
-        this.footers = new ArrayList<Long>();
 
-        initialSectioning();
-
-        if (onlyContentInSection) {
-            if (headerAdapter != null) {
-                insertLayoutRangeEnd++;
+        if (headerAdapter != null && footerAdapter != null) {
+            if (!headers.contains(insertedSectionKey)) {
+                headers.add(insertedSectionKey);
+                sortHeaders();
+                // 3 = header + footer + content
+                headerPositions = shiftPosition(insertLayoutRangeStart - 1, 3, headerPositions);
+                headerPositions.put(insertLayoutRangeStart, insertedSectionKey);
                 headerAdapter.setHeaders(headers);
-            }
 
-            if (footerAdapter != null) {
-                insertLayoutRangeEnd++;
+                footers.add(insertedSectionKey);
+                sortFooters();
+                footerPositions = shiftPosition(insertLayoutRangeStart, 3, footerPositions);
+                footerPositions.put(insertLayoutRangeStart + 2, insertedSectionKey);
                 footerAdapter.setFooters(footers);
+                insertLayoutRangeEnd += 2;
+            } else {
+                // 1 = content
+                headerPositions = shiftPosition(insertLayoutRangeStart -1, 1, headerPositions);
+                footerPositions = shiftPosition(insertLayoutRangeStart -1, 1, footerPositions);
+            }
+        }
+
+        if (headerAdapter != null && footerAdapter == null) {
+            if (!headers.contains(insertedSectionKey)) {
+                headers.add(insertedSectionKey);
+                sortHeaders();
+                // 2 = header + content
+                headerPositions = shiftPosition(insertLayoutRangeStart - 1, 2, headerPositions);
+                headerPositions.put(insertLayoutRangeStart, insertedSectionKey);
+                headerAdapter.setHeaders(headers);
+                insertLayoutRangeEnd++;
+            } else {
+                // 1 = content
+                headerPositions = shiftPosition(insertLayoutRangeStart -1, 1, headerPositions);
+                footerPositions = shiftPosition(insertLayoutRangeStart -1, 1, footerPositions);
+            }
+        }
+
+        if (headerAdapter == null && footerAdapter != null) {
+            if (!footers.contains(insertedSectionKey)) {
+                footers.add(insertedSectionKey);
+                sortFooters();
+                // 2 = footer + content
+                footerPositions = shiftPosition(insertLayoutRangeStart -1, 2, footerPositions);
+                footerPositions.put(insertedLayoutPosition + 1, insertedSectionKey);
+                footerAdapter.setFooters(footers);
+                insertLayoutRangeEnd++;
+            } else {
+                // 1 = content
+                footerPositions = shiftPosition(insertLayoutRangeStart -1, 1, footerPositions);
             }
         }
 
         contentAdapter.setContents(contents);
+
+        Log.d("AB headers", headers.toString());
+        Log.d("AB headerPositions 5", headerPositions.toString());
+        Log.d("AB footers", footers.toString());
+        Log.d("AB footerPositions", footerPositions.toString());
+        // notifyDataSetChanged();
         notifyItemRangeInserted(insertLayoutRangeStart, insertLayoutRangeEnd - insertLayoutRangeStart + 1);
     }
 

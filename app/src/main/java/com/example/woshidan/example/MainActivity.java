@@ -26,7 +26,7 @@ public class MainActivity extends AppCompatActivity {
 
         ArrayList<Content> items = new ArrayList<>();
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 2; i++) {
             items.add(getRandomImageContent());
         }
 
